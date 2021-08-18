@@ -1,80 +1,66 @@
-import 'package:burc_rehberi_uygulamasi/burc_liste.dart';
-import 'package:burc_rehberi_uygulamasi/models/burc.dart';
 import 'package:flutter/material.dart';
 import 'package:palette_generator/palette_generator.dart';
+import 'model/burc.dart';
 
 class BurcDetay extends StatefulWidget {
-  int gelenIndex;
-
-  BurcDetay(this.gelenIndex);
+  final Burc secilenBurc;
+  const BurcDetay({required this.secilenBurc, Key? key}) : super(key: key);
 
   @override
   _BurcDetayState createState() => _BurcDetayState();
 }
 
 class _BurcDetayState extends State<BurcDetay> {
-  Burc secilenBurc;
-  Color baskinRenk;
-  PaletteGenerator paletteGenerator;
+  Color appbarRengi = Colors.transparent;
+  late PaletteGenerator _generator;
 
   @override
   void initState() {
     super.initState();
-     secilenBurc = BurcListesi
-        .tumBurclar[widget.gelenIndex]; //(tumBurclar) statik olduğu için erişebildik
-    baskinRengiBul();
+
+    WidgetsBinding.instance!.addPostFrameCallback((_) => appbarRenginiBul());
+    // _generator = PaletteGenerator.fromImageProvider(AssetImage(assetName));
   }
-
-  void baskinRengiBul(){
-    Future<PaletteGenerator>fPaletteGenerator = PaletteGenerator.fromImageProvider(AssetImage("images/"+secilenBurc.burcBuyukResim));
-
-     fPaletteGenerator.then((value) {
-       paletteGenerator = value;
-       debugPrint("Seçilen Renk"+ paletteGenerator.dominantColor.color.toString());
-       setState(() {
-         baskinRenk = paletteGenerator.vibrantColor.color;
-       });
-     });
-  }
-
 
   @override
   Widget build(BuildContext context) {
-  return Scaffold(
-      body: CustomScrollView(
-        primary: true,
-        slivers: [
+    return Scaffold(
+        body: CustomScrollView(
+      slivers: [
+        SliverAppBar(
+          expandedHeight: 250,
+          pinned: true,
+          backgroundColor: appbarRengi,
+          flexibleSpace: FlexibleSpaceBar(
+            title: Text(widget.secilenBurc.burcAdi + " Burcu ve Özellikleri"),
+            centerTitle: true,
+            background: Image.asset(
+              'images/' + widget.secilenBurc.burcBuyukResim,
+              fit: BoxFit.cover,
+            ),
+          ),
+        ),
+        SliverToBoxAdapter(
+          child: Container(
+            margin: EdgeInsets.all(16),
+            padding: EdgeInsets.all(8),
+            child: SingleChildScrollView(
+              child: Text(
+                widget.secilenBurc.burcDetayi,
+                style: Theme.of(context).textTheme.subtitle1,
+              ),
+            ),
+          ),
+        ),
+      ],
+    ));
+  }
 
-          SliverAppBar(
-            expandedHeight: 250,
-            pinned: true,
-            primary: true,
-            backgroundColor: baskinRenk != null ? baskinRenk : Colors.pink,
-            flexibleSpace: FlexibleSpaceBar(          //background: eklemek için flexibleSpace yapıp içine koyuyoruz
-              background: Image.asset("images/"+secilenBurc.burcBuyukResim, fit: BoxFit.cover,), //cover tüm alana resmi yayar
-              centerTitle: true,
-               title: Text(secilenBurc.burcAdi + " Burcu ve Özellikleri"),
-            ),
-           
-          ),
-            
-          SliverToBoxAdapter(
-            child: Container(
-              margin: EdgeInsets.all(8),
-              padding: EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: Colors.pink.shade50,
-                borderRadius: BorderRadius.all(Radius.circular(10)), //köşe kıvrımı
-              ),
-              
-              
-              child: SingleChildScrollView(
-                child: Text(secilenBurc.burcDetay, style: TextStyle(fontSize: 18, color: Colors.black),),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
+  void appbarRenginiBul() async {
+    _generator = await PaletteGenerator.fromImageProvider(
+        AssetImage('images/${widget.secilenBurc.burcBuyukResim}'));
+    appbarRengi = _generator.vibrantColor!.color;
+    setState(() {});
+    print(appbarRengi);
   }
 }
